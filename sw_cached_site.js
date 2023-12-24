@@ -1,27 +1,12 @@
-const cacheName = 'v1';
+const cacheName = 'v2';
 
-const cacheAssets = [
-    'index.html',
-    'about.html',
-    'css/style.css',
-    'js/main.js'
-]
+
 
 // Call Install Event
 
 self.addEventListener('install', e => {
-    console.log('Service Worker: Installed');
+    console.log(`Service Worker: Installed ${e}`);
 
-    e.waitUntil(
-        caches
-            .open(cacheName)
-            .then(cache => {
-                console.log('Service Worker: Caching Files');
-                cache.addAll(cacheAssets);
-            })
-            .then(() => self.skipWaiting())
-            .catch(err => console.log(`Service Worker Caching: Error: ${err}`))
-    );
 });
 
 // Call Activate Event
@@ -46,11 +31,23 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
     console.log('Service Worker: Fetching');
     e.respondWith(
-        fetch(e.request).catch(() => {
-            caches.match(e.request);
-            console.log("Browser is Offline: Loading content from SW-Cache");
-        }
+       fetch(e.request)
+           .then(res => {
+               // Make clone of reponse(site)
+               const resClone = res.clone();
+               // Open cache
+               caches
+                   .open(cacheName)
+                   .then(cache => {
+                       // Add Response to cache
+                       cache.put(e.request, resClone);
+                   });
+               return res;
+           }).catch(err => {
+               console.log(`Service Worker Offline Cache : ${err}`);
+           caches.match(e.request).then(res => res);
+       }
 
-        )
-    )
+       )
+    );
 });
