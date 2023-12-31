@@ -27,6 +27,8 @@ self.addEventListener('install', e => {
 // Call Activate Event
 self.addEventListener('activate', e => {
     console.log('Service Worker: Activated');
+    // clients loaded in the same scope do not need to be reloaded before their fetches will go through this service worker.
+    e.waitUntil(clients.claim());
     //Remove unwanted caches
     e.waitUntil(
         caches.keys().then(cacheNames => {
